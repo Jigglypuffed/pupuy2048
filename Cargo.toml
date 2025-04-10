@@ -1,0 +1,7 @@
+[package]
+name = "pupuy2048"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+move_lookup = { path = "./move_lookup" }
