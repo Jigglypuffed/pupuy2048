@@ -46,20 +46,30 @@ impl Board {
         Self { squares }
     }
 
+    pub fn add_n(&mut self, sq: u32, n: u32) -> bool {
+        let target = &mut self.squares[sq as usize / 4][sq as usize % 4];
+        if *target == 0 {
+            *target = n;
+            true
+        } else {
+            false
+        }
+    }
+
     pub fn move_left(&mut self) -> bool {
         let mut legal = false;
-        for x in 0..4 {
+        for y in 0..4 {
             let mut v = 0;
-            for y in 0..4 {
-                v = v * 32 + self.squares[x][y];
+            for x in 0..4 {
+                v = v * 32 + self.squares[y][x];
             }
             let mut c = MOVE_TABLE[v as usize].clone();
             if c == v {
                 continue;
             }
             legal = true;
-            for y in (0..4).rev() {
-                self.squares[x][y] = c % 32;
+            for x in (0..4).rev() {
+                self.squares[y][x] = c % 32;
                 c /= 32;
             }
         }
@@ -69,18 +79,18 @@ impl Board {
 
     pub fn move_right(&mut self) -> bool {
         let mut legal = false;
-        for x in 0..4 {
+        for y in 0..4 {
             let mut v = 0;
-            for y in (0..4).rev() {
-                v = v * 32 + self.squares[x][y];
+            for x in (0..4).rev() {
+                v = v * 32 + self.squares[y][x];
             }
             let mut c = MOVE_TABLE[v as usize].clone();
             if c == v {
                 continue;
             }
             legal = true;
-            for y in 0..4 {
-                self.squares[x][y] = c % 32;
+            for x in 0..4 {
+                self.squares[y][x] = c % 32;
                 c /= 32;
             }
         }
@@ -90,18 +100,18 @@ impl Board {
 
     pub fn move_up(&mut self) -> bool {
         let mut legal = false;
-        for y in 0..4 {
+        for x in 0..4 {
             let mut v = 0;
-            for x in 0..4 {
-                v = v * 32 + self.squares[x][y];
+            for y in 0..4 {
+                v = v * 32 + self.squares[y][x];
             }
             let mut c = MOVE_TABLE[v as usize].clone();
             if c == v {
                 continue;
             }
             legal = true;
-            for x in (0..4).rev() {
-                self.squares[x][y] = c % 32;
+            for y in (0..4).rev() {
+                self.squares[y][x] = c % 32;
                 c /= 32;
             }
         }
@@ -111,18 +121,18 @@ impl Board {
 
     pub fn move_down(&mut self) -> bool {
         let mut legal = false;
-        for y in 0..4 {
+        for x in 0..4 {
             let mut v = 0;
-            for x in (0..4).rev() {
-                v = v * 32 + self.squares[x][y];
+            for y in (0..4).rev() {
+                v = v * 32 + self.squares[y][x];
             }
             let mut c = MOVE_TABLE[v as usize].clone();
             if c == v {
                 continue;
             }
             legal = true;
-            for x in 0..4 {
-                self.squares[x][y] = c % 32;
+            for y in 0..4 {
+                self.squares[y][x] = c % 32;
                 c /= 32;
             }
         }
@@ -140,6 +150,28 @@ fn fen_parse_test() {
          [3,  0,  0, 5],
          [10, 11, 1, 0],
          [0,  0,  0, 0]]
+    )
+}
+
+#[rustfmt::skip]
+#[test]
+fn add_n_test() {
+    assert_eq!(
+        {
+            let mut a = Board::from_fen("258a/3005/ab10/0000");
+            a.add_n(12, 3); a.squares
+        },
+        [[2,  5,  8, 10],
+         [3,  0,  0, 5],
+         [10, 11, 1, 0],
+         [3,  0,  0, 0]]
+    );
+    assert_eq!(
+        {
+            let mut a = Board::from_fen("258a/3005/ab10/0000");
+            a.add_n(10, 3)
+        },
+        false
     )
 }
 
