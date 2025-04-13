@@ -11,6 +11,41 @@ impl Board {
         Self { squares }
     }
 
+    pub fn from_fen(fen: &str) -> Self {
+        let mut squares = [[0; 4]; 4];
+        let mut x = 0;
+        let mut y = 0;
+        for c in fen.chars() {
+            match c {
+                '0' => squares[y][x] = 0,
+                '1' => squares[y][x] = 1,
+                '2' => squares[y][x] = 2,
+                '3' => squares[y][x] = 3,
+                '4' => squares[y][x] = 4,
+                '5' => squares[y][x] = 5,
+                '6' => squares[y][x] = 6,
+                '7' => squares[y][x] = 7,
+                '8' => squares[y][x] = 8,
+                '9' => squares[y][x] = 9,
+                'a' => squares[y][x] = 10,
+                'b' => squares[y][x] = 11,
+                'c' => squares[y][x] = 12,
+                'd' => squares[y][x] = 13,
+                'e' => squares[y][x] = 14,
+                'f' => squares[y][x] = 15,
+                '/' => {
+                    y += 1;
+                    x = 0
+                }
+                _ => panic!(),
+            }
+            if c != '/' {
+                x += 1;
+            }
+        }
+        Self { squares }
+    }
+
     pub fn move_left(&mut self) -> bool {
         let mut legal = false;
         for x in 0..4 {
@@ -96,8 +131,20 @@ impl Board {
     }
 }
 
-#[test]
 #[rustfmt::skip]
+#[test]
+fn fen_parse_test() {
+    assert_eq!(
+        Board::from_fen("258a/3005/ab10/0000").squares,
+        [[2,  5,  8, 10],
+         [3,  0,  0, 5],
+         [10, 11, 1, 0],
+         [0,  0,  0, 0]]
+    )
+}
+
+#[rustfmt::skip]
+#[test]
 fn move_test() {
     let start = Board::new(
         [[0, 0, 0, 1],
