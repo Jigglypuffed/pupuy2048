@@ -17,7 +17,7 @@ fn main() {
             .read_line(&mut buf)
             .expect("Failed to read line");
         let tokens: Vec<_> = buf.split_ascii_whitespace().collect();
-        if tokens.len() == 0 {
+        if tokens.is_empty() {
             continue;
         }
         let cmd = &tokens[0];

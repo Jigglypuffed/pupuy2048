@@ -3,7 +3,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use crate::board::{Board, MOVE_DOWN, MOVE_LEFT, MOVE_RIGHT, MOVE_UP};
+use crate::board::Board;
 
 pub struct Searcher<'a> {
     root_pos: Board,

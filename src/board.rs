@@ -90,7 +90,7 @@ impl Board {
             for x in 0..4 {
                 v = v * 32 + self.squares[y][x];
             }
-            let mut c = MOVE_TABLE[v as usize].clone();
+            let mut c = MOVE_TABLE[v as usize];
             if c == v {
                 continue;
             }
@@ -111,7 +111,7 @@ impl Board {
             for x in (0..4).rev() {
                 v = v * 32 + self.squares[y][x];
             }
-            let mut c = MOVE_TABLE[v as usize].clone();
+            let mut c = MOVE_TABLE[v as usize];
             if c == v {
                 continue;
             }
@@ -132,7 +132,7 @@ impl Board {
             for y in 0..4 {
                 v = v * 32 + self.squares[y][x];
             }
-            let mut c = MOVE_TABLE[v as usize].clone();
+            let mut c = MOVE_TABLE[v as usize];
             if c == v {
                 continue;
             }
@@ -153,7 +153,7 @@ impl Board {
             for y in (0..4).rev() {
                 v = v * 32 + self.squares[y][x];
             }
-            let mut c = MOVE_TABLE[v as usize].clone();
+            let mut c = MOVE_TABLE[v as usize];
             if c == v {
                 continue;
             }
@@ -178,10 +178,7 @@ impl Board {
     }
 
     pub fn get_legal_moves(&self) -> u8 {
-        self.clone().move_left() as u8 * MOVE_LEFT
-            | self.clone().move_right() as u8 * MOVE_RIGHT
-            | self.clone().move_up() as u8 * MOVE_UP
-            | self.clone().move_down() as u8 * MOVE_DOWN
+        (self.clone().move_left() as u8 * MOVE_LEFT) | (self.clone().move_right() as u8 * MOVE_RIGHT) | (self.clone().move_up() as u8 * MOVE_UP) | (self.clone().move_down() as u8 * MOVE_DOWN)
     }
 
     pub fn get_game_state(&self) -> GameState {
@@ -236,12 +233,11 @@ fn add_n_test() {
          [10, 11, 1, 0],
          [3,  0,  0, 0]]
     );
-    assert_eq!(
-        {
+    assert!(
+        !{
             let mut a = Board::from_fen("258a/3005/ab10/0000");
             a.add_tile(10, 3)
-        },
-        false
+        }
     )
 }
 
@@ -276,20 +272,20 @@ fn move_test() {
 
     assert_eq!(start.get_legal_moves(), 15);
 
-    let mut a = start.clone();
-    let mut b = start.clone();
-    let mut c = start.clone();
-    let mut d = start.clone();
+    let mut a = start;
+    let mut b = start;
+    let mut c = start;
+    let mut d = start;
 
-    assert_eq!(a.move_left(), true);
+    assert!(a.move_left());
     assert_eq!(a.squares, moved_left.squares);
 
-    assert_eq!(b.move_right(), true);
+    assert!(b.move_right());
     assert_eq!(b.squares, moved_right.squares);
 
-    assert_eq!(c.move_up(), true);
+    assert!(c.move_up());
     assert_eq!(c.squares, moved_up.squares);
 
-    assert_eq!(d.move_down(), true);
+    assert!(d.move_down());
     assert_eq!(d.squares, moved_down.squares);
 }

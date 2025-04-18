@@ -20,7 +20,7 @@ pub fn command_is_ready() {
 }
 
 pub fn command_position(params: &[&str], board: &mut Board) {
-    if let Some(fen) = params.get(0) {
+    if let Some(fen) = params.first() {
         *board = Board::from_fen(fen)
     } else {
         panic!("Invalid command format")
@@ -29,7 +29,7 @@ pub fn command_position(params: &[&str], board: &mut Board) {
 }
 
 pub fn command_move(params: &[&str], board: &mut Board) {
-    match params.get(0) {
+    match params.first() {
         Some(&"l") => {
             board.move_left();
         }
@@ -100,23 +100,20 @@ pub fn command_go(
 
     let mut params = params.iter();
     while let Some(p) = params.next() {
-        match *p {
-            "time" => {
-                move_time = params
-                    .next()
-                    .unwrap()
-                    .parse::<u64>()
-                    .expect("Incorrect time format")
-            }
-            _ => {}
+        if *p == "time" {
+            move_time = params
+                .next()
+                .unwrap()
+                .parse::<u64>()
+                .expect("Incorrect time format")
         }
     }
 
-    let board = board.clone();
+    let board = *board;
     let stopped = Arc::clone(&stopped);
 
     *mst = thread::spawn(move || {
-        Searcher::new(board, move_time, &*stopped).search();
+        Searcher::new(board, move_time, &stopped).search();
     });
 }
 
