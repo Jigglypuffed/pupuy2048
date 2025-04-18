@@ -1,4 +1,16 @@
 use move_lookup::MOVE_TABLE;
+use rand::Rng;
+
+pub const MOVE_LEFT: u8 = 1 << 0;
+pub const MOVE_RIGHT: u8 = 1 << 1;
+pub const MOVE_UP: u8 = 1 << 2;
+pub const MOVE_DOWN: u8 = 1 << 3;
+
+#[derive(PartialEq, Eq)]
+pub enum GameState {
+    OnGoing,
+    Lost,
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct Board {
@@ -46,7 +58,7 @@ impl Board {
         Self { squares }
     }
 
-    pub fn add_n(&mut self, sq: u32, n: u32) -> bool {
+    pub fn add_tile(&mut self, sq: u32, n: u32) -> bool {
         let target = &mut self.squares[sq as usize / 4][sq as usize % 4];
         if *target == 0 {
             *target = n;
@@ -54,6 +66,21 @@ impl Board {
         } else {
             false
         }
+    }
+
+    pub fn add_random_tile(&mut self) {
+        let mut empty: Vec<(usize, usize)> = vec![];
+
+        for y in 0..4 {
+            for x in 0..4 {
+                if self.squares[y][x] == 0 {
+                    empty.push((y, x));
+                }
+            }
+        }
+        let (y, x) = empty[rand::thread_rng().gen_range(0..empty.len())];
+        let tile = if rand::random::<f32>() < 0.9 { 1 } else { 2 };
+        self.squares[y][x] = tile;
     }
 
     pub fn move_left(&mut self) -> bool {
@@ -139,6 +166,49 @@ impl Board {
 
         legal
     }
+
+    pub fn apply_move(&mut self, mv: u8) -> bool {
+        match mv {
+            MOVE_LEFT => self.move_left(),
+            MOVE_RIGHT => self.move_right(),
+            MOVE_UP => self.move_up(),
+            MOVE_DOWN => self.move_down(),
+            _ => panic!("Unexpected move format"),
+        }
+    }
+
+    pub fn get_legal_moves(&self) -> u8 {
+        self.clone().move_left() as u8 * MOVE_LEFT
+            | self.clone().move_right() as u8 * MOVE_RIGHT
+            | self.clone().move_up() as u8 * MOVE_UP
+            | self.clone().move_down() as u8 * MOVE_DOWN
+    }
+
+    pub fn get_game_state(&self) -> GameState {
+        if self.get_legal_moves() > 0 {
+            GameState::OnGoing
+        } else {
+            GameState::Lost
+        }
+    }
+
+    pub fn evaluate(&self) -> f32 {
+        let mut empty = 0;
+        let mut sum = 0.0;
+
+        for y in 0..4 {
+            for x in 0..4 {
+                let v = self.squares[y][x];
+                if v == 0 {
+                    empty += 1;
+                } else {
+                    sum += 2f32.powi(v as i32);
+                }
+            }
+        }
+
+        sum + empty as f32 * 10.0 // weight for empty cells
+    }
 }
 
 #[rustfmt::skip]
@@ -159,7 +229,7 @@ fn add_n_test() {
     assert_eq!(
         {
             let mut a = Board::from_fen("258a/3005/ab10/0000");
-            a.add_n(12, 3); a.squares
+            a.add_tile(12, 3); a.squares
         },
         [[2,  5,  8, 10],
          [3,  0,  0, 5],
@@ -169,7 +239,7 @@ fn add_n_test() {
     assert_eq!(
         {
             let mut a = Board::from_fen("258a/3005/ab10/0000");
-            a.add_n(10, 3)
+            a.add_tile(10, 3)
         },
         false
     )
@@ -203,6 +273,8 @@ fn move_test() {
          [0, 0, 0, 1],
          [2, 3, 2, 3],
          [3, 1, 1, 1]]);
+
+    assert_eq!(start.get_legal_moves(), 15);
 
     let mut a = start.clone();
     let mut b = start.clone();

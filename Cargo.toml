@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 move_lookup = { path = "./move_lookup" }
+rand = "0.8"
