@@ -1,10 +1,11 @@
 use move_lookup::MOVE_TABLE;
 use rand::Rng;
 
-pub const MOVE_LEFT: u8 = 1 << 0;
-pub const MOVE_RIGHT: u8 = 1 << 1;
-pub const MOVE_UP: u8 = 1 << 2;
-pub const MOVE_DOWN: u8 = 1 << 3;
+pub type Move = u8;
+pub const MOVE_LEFT: Move = 1 << 0;
+pub const MOVE_RIGHT: Move = 1 << 1;
+pub const MOVE_UP: Move = 1 << 2;
+pub const MOVE_DOWN: Move = 1 << 3;
 
 #[derive(PartialEq, Eq)]
 pub enum GameState {
@@ -167,7 +168,7 @@ impl Board {
         legal
     }
 
-    pub fn apply_move(&mut self, mv: u8) -> bool {
+    pub fn apply_move(&mut self, mv: Move) -> bool {
         match mv {
             MOVE_LEFT => self.move_left(),
             MOVE_RIGHT => self.move_right(),
@@ -177,8 +178,11 @@ impl Board {
         }
     }
 
-    pub fn get_legal_moves(&self) -> u8 {
-        (self.clone().move_left() as u8 * MOVE_LEFT) | (self.clone().move_right() as u8 * MOVE_RIGHT) | (self.clone().move_up() as u8 * MOVE_UP) | (self.clone().move_down() as u8 * MOVE_DOWN)
+    pub fn get_legal_moves(&self) -> Move {
+        (self.clone().move_left() as Move * MOVE_LEFT)
+            | (self.clone().move_right() as Move * MOVE_RIGHT)
+            | (self.clone().move_up() as Move * MOVE_UP)
+            | (self.clone().move_down() as Move * MOVE_DOWN)
     }
 
     pub fn get_game_state(&self) -> GameState {
