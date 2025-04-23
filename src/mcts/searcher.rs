@@ -102,7 +102,6 @@ impl<'a> Searcher<'a> {
                     continue;
                 }
 
-                println!("{:?}, {:?}, {:?}", i, best_move_shift, best_score);
                 let score = self.ucb1(&node, i);
                 if score > best_score {
                     best_score = score;
