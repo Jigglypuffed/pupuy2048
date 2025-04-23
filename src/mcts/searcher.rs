@@ -3,7 +3,9 @@ use std::{
     time::{Duration, Instant},
 };
 
-use crate::board::{Board, GameState, Move};
+use rand::Rng;
+
+use crate::board::{Board, GameState, Move, MOVE_DOWN, MOVE_LEFT, MOVE_RIGHT, MOVE_UP};
 
 use super::node::Node;
 
@@ -14,6 +16,7 @@ pub struct Searcher<'a> {
     stopped: &'a AtomicBool,
     tree: Vec<Node>,
     selection_line: Vec<usize>,
+    history: Vec<Board>,
 }
 
 impl<'a> Searcher<'a> {
@@ -25,6 +28,7 @@ impl<'a> Searcher<'a> {
             stopped,
             tree: vec![Node::new(&board)],
             selection_line: vec![],
+            history: vec![],
         }
     }
 
@@ -33,8 +37,7 @@ impl<'a> Searcher<'a> {
     }
 
     pub fn search(&mut self) -> Move {
-        let best_move = 0;
-        for _ in 0..30 {
+        loop {
             if let Some(selected_node_idx) = self.select() {
                 if self.tree[selected_node_idx].state != GameState::Lost {
                     self.expand(selected_node_idx);
@@ -50,6 +53,35 @@ impl<'a> Searcher<'a> {
                 break;
             }
         }
+
+        let root = &self.tree[0];
+        let mut best_move = 0;
+        let mut best_score = f32::MIN;
+        println!("{:?}", root.children_indices);
+        for i in 0..4 {
+            // Illegal/unexplored move
+            if 1 << i & root.moves == 0 || root.children_indices[i] == usize::MAX {
+                continue;
+            }
+
+            let node = &self.tree[root.children_indices[i]];
+            let score = node.rewards;
+            if score > best_score {
+                best_score = score;
+                best_move = 1 << i;
+            }
+        }
+
+        println!(
+            "{0}",
+            match best_move {
+                MOVE_LEFT => "bestmove l",
+                MOVE_RIGHT => "bestmove r",
+                MOVE_UP => "bestmove u",
+                MOVE_DOWN => "bestmove d",
+                _ => "",
+            }
+        );
         best_move
     }
 
@@ -71,7 +103,8 @@ impl<'a> Searcher<'a> {
                     continue;
                 }
 
-                let score = 0.0;
+                println!("{:?}, {:?}, {:?}", i, best_move_shift, best_score);
+                let score = self.ucb1(&node, i);
                 if score > best_score {
                     best_score = score;
                     best_move_shift = i;
@@ -85,24 +118,81 @@ impl<'a> Searcher<'a> {
                 break;
             }
 
-            self.selection_line.push(best_move_shift);
+            self.selection_line.push(next_idx);
+            self.history.push(self.board.clone());
             self.board.apply_move(1 << best_move_shift);
-            node_idx = node.children_indices[best_move_shift.trailing_zeros() as usize]
+            node_idx = next_idx;
         }
 
         Some(node_idx)
     }
 
     fn expand(&mut self, node_idx: usize) {
-        todo!()
+        let node = &mut self.tree[node_idx];
+        let unexplored: Vec<_> = (0..4)
+            .filter(|&i| node.moves_to_explore & (1 << i) != 0)
+            .collect();
+        if unexplored.is_empty() {
+            return;
+        }
+        let move_shift = unexplored[rand::thread_rng().gen_range(0..unexplored.len())];
+        let move_to_expand = 1 << move_shift;
+
+        // Mark as already explored
+        node.moves_to_explore &= !move_to_expand;
+
+        self.history.push(self.board.clone());
+        self.board.apply_move(move_to_expand);
+        self.board.add_random_tile();
+
+        let new_node_idx = self.tree.len();
+        self.tree.push(Node::new(&self.board));
+        self.tree[node_idx].children_indices[move_shift] = new_node_idx;
+
+        let idx_to_explore = self.tree[node_idx].children_indices[move_shift];
+        self.tree[idx_to_explore].index = self.tree.len() - 1;
     }
 
     fn rollout(&mut self) -> f32 {
-        todo!()
+        let state = self.board.get_game_state();
+
+        if state == GameState::Lost || self.history.len() > 30 {
+            return self.board.evaluate()
+        }
+
+        let legal: Vec<_> = (0..4)
+            .filter(|&i| self.board.get_legal_moves() & (1 << i) != 0)
+            .collect();
+        let mv = 1 << legal[rand::thread_rng().gen_range(0..legal.len())];
+
+        self.history.push(self.board.clone());
+        self.board.apply_move(mv);
+        self.board.add_random_tile();
+        self.rollout()
     }
 
     fn backpropagate(&mut self, result: f32) {
-        todo!()
+        while let Some(node_idx) = self.selection_line.pop() {
+            let node = &mut self.tree[node_idx];
+            node.rewards += result;
+            node.visits += 1;
+            self.board = self.history.pop().unwrap();
+        }
+    }
+
+    fn ucb1(&self, node: &Node, move_shift: usize) -> f32 {
+        let child_idx = node.children_indices[move_shift];
+        if child_idx == usize::MAX {
+            return 500000.0;
+        }
+
+        let child = &self.tree[child_idx];
+        if node.visits == 0 || child.visits == 0 {
+            return 500000.0;
+        }
+
+        child.rewards / child.visits as f32
+            + f32::sqrt(2.0 * f32::ln(node.visits as f32) / child.visits as f32)
     }
 }
 

@@ -7,7 +7,7 @@ pub const MOVE_RIGHT: Move = 1 << 1;
 pub const MOVE_UP: Move = 1 << 2;
 pub const MOVE_DOWN: Move = 1 << 3;
 
-#[derive(PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum GameState {
     OnGoing,
     Lost,
