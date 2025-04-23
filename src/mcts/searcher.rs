@@ -57,7 +57,6 @@ impl<'a> Searcher<'a> {
         let root = &self.tree[0];
         let mut best_move = 0;
         let mut best_score = f32::MIN;
-        println!("{:?}", root.children_indices);
         for i in 0..4 {
             // Illegal/unexplored move
             if 1 << i & root.moves == 0 || root.children_indices[i] == usize::MAX {

@@ -25,7 +25,6 @@ pub fn command_position(params: &[&str], board: &mut Board) {
     } else {
         panic!("Invalid command format")
     };
-    println!("{:?}", board);
 }
 
 pub fn command_move(params: &[&str], board: &mut Board) {
@@ -44,7 +43,6 @@ pub fn command_move(params: &[&str], board: &mut Board) {
         }
         _ => panic!("Invalid command format"),
     }
-    println!("{:?}", board);
 }
 
 pub fn command_add(params: &[&str], board: &mut Board) {
